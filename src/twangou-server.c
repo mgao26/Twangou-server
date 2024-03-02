@@ -180,7 +180,6 @@ int main(void)
     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
-    char *createTable;
     char *insertValues;
     char *pullData;
     char dataPulled[2048] = {0};
@@ -197,9 +196,9 @@ int main(void)
         fprintf(stdout, "Opened database successfully\n");
     }
 
-    createTable = "CREATE TABLE IF NOT EXISTS USERS(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , USERNAME TEXT NOT NULL, PASSWORD TEXT NOT NULL);";
+    char *createUsersTable = "CREATE TABLE IF NOT EXISTS USERS(USER_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , USERNAME TEXT NOT NULL, PASSWORD TEXT NOT NULL);";
     // Execute SQL statement
-    rc = sqlite3_exec(db, createTable, callback, 0, &zErrMsg);
+    rc = sqlite3_exec(db, createUsersTable, callback, 0, &zErrMsg);
 
     if (rc != SQLITE_OK)
     {
@@ -211,6 +210,34 @@ int main(void)
         fprintf(stdout, "Table created successfully\n");
     }
 
+    char *createGohusTable = "CREATE TABLE IF NOT EXISTS GOHUS(gohuID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , title TEXT NOT NULL, description TEXT NOT NULL, \
+                        coverImage BLOB NOT NULL, host_id INTEGER, FOREIGN KEY (host_id) REFERENCES users(user_id));";
+    
+    rc = sqlite3_exec(db, createGohusTable, callback, 0, &zErrMsg);
+
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    else
+    {
+        fprintf(stdout, "Table created successfully\n");
+    }
+
+    char *createProductsTable = "CREATE TABLE IF NOT EXISTS PRODUCTS(PRODUCT_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , name TEXT NOT NULL, quantity INTEGER NOT NULL, \
+                            cost REAL NOT NULL, productImage BLOB NOT NULL);";
+    rc = sqlite3_exec(db, createProductsTable, callback, 0, &zErrMsg);
+
+
+    char *createGohuProductsTable = "CREATE TABLE IF NOT EXISTS GOHU_PRODUCTS(GOHU_PRODUCT_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , gohu_ID INTEGER NOT NULL, \
+                                product_ID INTEGER NOT NULL, FOREIGN KEY (gohu_id) REFERENCES gohus(gohuID), FOREIGN KEY (product_ID) REFERENCES products(PRODUCT_ID));";
+    rc = sqlite3_exec(db, createGohuProductsTable, callback, 0, &zErrMsg);
+    
+
+    char *createGohuMembersTable = "CREATE TABLE IF NOT EXISTS GOHU_MEMBERS(GOHU_MEMBER_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , gohu_ID INTEGER NOT NULL, \
+                            user_ID INTEGER NOT NULL, FOREIGN KEY (gohu_id) REFERENCES gohus(gohuID), FOREIGN KEY (user_ID) REFERENCES products(USER_ID));";
+    rc = sqlite3_exec(db, createGohuMembersTable, callback, 0, &zErrMsg);
     /*char *deleteValues = "DELETE FROM USERS;";
     rc = sqlite3_exec(db, deleteValues,  callback, 0, &zErrMsg);*/
     /*insertValues = "INSERT INTO USERS (USERNAME, PASSWORD) VALUES('markgao47', 'high4217');";
